@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart';
 import 'repositories.dart';
+import '../services/services.dart';
 import 'dart:convert';
 
 class Login extends StatefulWidget {
@@ -8,27 +9,10 @@ class Login extends StatefulWidget {
   InputValue createState() => InputValue();
 }
 
-class Service {
-  final String endpoint = 'https://api.github.com/';
-  Future<String> getUser(String user) {
-    return http.get(endpoint + 'users/' + user).then((response) {
-      return response.body;
-    }).catchError((error) {
-      return error;
-    });
-  }
-
-  Future<String> getRepos(String user) {
-    return http.get(endpoint + 'users/' + user + '/repos').then((response) {
-      return response.body;
-    }).catchError((error) {
-      return error;
-    });
-  }
-
+class Fn {
   void login(user, context) {
     try {
-      getUser(user).then((response) async {
+      new Service().getUser(user).then((response) async {
         var res = jsonDecode(response);
         if (res['message'] != null) {
           return showDialog(
@@ -37,11 +21,10 @@ class Service {
                 content: Text('Usuário não encontrado'),
               ));
         } else {
-          var repos = await getRepos(user);
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => Repositories(repos: repos)));
+                  builder: (context) => Repositories(user: user)));
         }
       });
     } catch (error) {
@@ -112,8 +95,7 @@ class InputValue extends State<Login> {
                                   flex: 1,
                                   child: InkWell(
                                     onTap: () {
-                                      Service()
-                                          .login(inputControler.text, context);
+                                      Fn().login(inputControler.text, context);
                                     },
                                     child: Container(
                                       alignment: AlignmentDirectional.center,
